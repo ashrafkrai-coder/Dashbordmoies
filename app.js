@@ -38,6 +38,22 @@ async function api(params, cuba = 2) {
 
 function idx(headers, regex) { return headers.findIndex(h => regex.test(h)); }
 
+function namaTingkatan(label) {
+  const map = {
+    'SATU': 'Ting 1', 'DUA': 'Ting 2', 'TIGA': 'Ting 3',
+    'EMPAT': 'Ting 4', 'LIMA': 'Ting 5',
+    'SIX': 'Ting 6', 'SEVEN': 'Ting 7', 'EIGHT': 'Ting 8',
+    'NINE': 'Ting 9', 'TEN': 'Ting 10',
+    '1': 'Ting 1', '2': 'Ting 2', '3': 'Ting 3',
+    '4': 'Ting 4', '5': 'Ting 5',
+    '6': 'Ting 6', '7': 'Ting 7', '8': 'Ting 8',
+    '9': 'Ting 9', '10': 'Ting 10',
+  };
+  const m = label.match(/(SATU|DUA|TIGA|EMPAT|LIMA|SIX|SEVEN|EIGHT|NINE|TEN|\d+)/i);
+  if (!m) return label;
+  return map[m[1].toUpperCase()] || label;
+}
+
 /* ---------- RENDER ---------- */
 function renderKPI(k) {
   const iJ = idx(k.headers, /jumlah/i), iS = idx(k.headers, /kehadiran/i);
@@ -79,13 +95,29 @@ function renderTingkat(k) {
     const g = grp[r[iT]] = grp[r[iT]] || [0, 0];
     g[0] += +m[1]; g[1] += +m[2];
   });
-  const labels = Object.keys(grp).sort();
+  const urutanTingkatan = {
+    'SATU': 1, 'DUA': 2, 'TIGA': 3, 'EMPAT': 4, 'LIMA': 5,
+    'SIX': 6, 'SEVEN': 7, 'EIGHT': 8, 'NINE': 9, 'TEN': 10,
+    '1': 1, '2': 2, '3': 3, '4': 4, '5': 5,
+    '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+  };
+  const labels = Object.keys(grp).sort((a, b) => {
+    const ma = a.match(/(\d+|SATU|DUA|TIGA|EMPAT|LIMA|SIX|SEVEN|EIGHT|NINE|TEN)/i);
+    const mb = b.match(/(\d+|SATU|DUA|TIGA|EMPAT|LIMA|SIX|SEVEN|EIGHT|NINE|TEN)/i);
+    const va = ma ? urutanTingkatan[ma[1].toUpperCase()] : null;
+    const vb = mb ? urutanTingkatan[mb[1].toUpperCase()] : null;
+    if (va !== null && vb !== null) return va - vb;
+    if (va !== null) return -1;
+    if (vb !== null) return 1;
+    return a.localeCompare(b);
+  });
+  const displayLabels = labels.map(namaTingkatan);
   buatChart('chartTingkat', {
     type: 'bar',
     data: {
-      labels,
+      labels: displayLabels,
       datasets: [{ label: '% Kehadiran',
-        data: labels.map(l => (grp[l][0] / grp[l][1] * 100).toFixed(1)),
+        data: labels.map(l => grp[l][0] / grp[l][1] * 100),
         backgroundColor: '#2980b9' }]
     },
     options: { scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
