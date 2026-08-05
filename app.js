@@ -134,7 +134,6 @@ function renderTingkat(k) {
   });
   const displayLabels = labels.map(namaTingkatan);
   const data = labels.map(l => grp[l][0] / grp[l][1] * 100);
-  const palette = ['#2563eb', '#0ea5e9', '#14b8a6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#22c55e', '#06b6d4', '#a855f7'];
   buatChart('chartTingkat', {
     type: 'bar',
     data: {
@@ -143,13 +142,16 @@ function renderTingkat(k) {
         label: '% Kehadiran',
         data,
         backgroundColor: (ctx) => {
-          const { chart } = ctx;
+          const { chart, dataIndex } = ctx;
           const { ctx: c, chartArea } = chart;
-          if (!chartArea) return palette[0];
+          if (!chartArea) return '#2563eb';
+          const v = data[dataIndex] || 0;
+          const t = Math.max(0, Math.min(100, v)) / 100; // 0..1
+          const topL = 62 - t * 22;   // % tinggi -> lebih terang di puncak
+          const botL = 46 - t * 20;   // % tinggi -> lebih pekat di bawah
           const g = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          const base = palette[ctx.dataIndex % palette.length];
-          g.addColorStop(0, base + 'cc');
-          g.addColorStop(1, base);
+          g.addColorStop(0, `hsl(217 91% ${botL}%)`);
+          g.addColorStop(1, `hsl(217 91% ${topL}%)`);
           return g;
         },
         borderRadius: 8,
@@ -203,9 +205,16 @@ function renderKelas(k) {
     const m = String(r[iJ]).match(/(\d+)\s*\/\s*(\d+)/);
     return m ? { k: r[iK], t: r[iT], j: r[iJ], p: +m[1] / +m[2] * 100 } : null;
   }).filter(Boolean).sort((a, b) => a.p - b.p).slice(0, 10);
-  $('tblKelas').innerHTML = '<table><tr><th>Kelas</th><th>Tingkatan</th><th>Hadir</th><th>%</th></tr>' +
-    rows.map(r => `<tr><td>${r.k}</td><td>${r.t}</td><td>${r.j}</td><td>${r.p.toFixed(1)}</td></tr>`).join('') +
-    '</table>';
+  const th = c => `<th class="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 bg-slate-50 border-b border-slate-200">${c}</th>`;
+  const td = c => `<td class="px-3 py-2 text-sm text-slate-700 border-b border-slate-100 whitespace-nowrap">${c}</td>`;
+  $('tblKelas').innerHTML =
+    '<div class="overflow-x-auto rounded-xl border border-slate-100">' +
+      '<table class="w-full border-collapse">' +
+        '<tr>' + ['Kelas','Tingkatan','Hadir','%'].map(th).join('') + '</tr>' +
+        rows.map(r => '<tr class="hover:bg-slate-50 transition-colors">' +
+          td(r.k) + td(r.t) + td(r.j) + td(r.p.toFixed(1)) + '</tr>').join('') +
+      '</table>' +
+    '</div>';
 }
 
 function renderBelumKemas(k) {
@@ -217,12 +226,18 @@ function renderBelumKemas(k) {
     .sort((a, b) => a.t.localeCompare(b.t) || a.k.localeCompare(b.k));
 
   if (!belum.length) {
-    $('tblBelum').innerHTML = '<p style="color:#27ae60;font-weight:600">✅ Semua kelas telah dikemaskini</p>';
+    $('tblBelum').innerHTML = '<p class="text-center py-6 text-emerald-600 font-semibold">✅ Semua kelas telah dikemaskini</p>';
     return;
   }
-  $('tblBelum').innerHTML = '<table><tr><th>Kelas</th><th>Tingkatan</th></tr>' +
-    belum.map(r => `<tr><td>${r.k}</td><td>${r.t}</td></tr>`).join('') +
-    '</table>';
+  const th = c => `<th class="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 bg-slate-50 border-b border-slate-200">${c}</th>`;
+  const td = c => `<td class="px-3 py-2 text-sm text-slate-700 border-b border-slate-100 whitespace-nowrap">${c}</td>`;
+  $('tblBelum').innerHTML =
+    '<div class="overflow-x-auto rounded-xl border border-slate-100">' +
+      '<table class="w-full border-collapse">' +
+        '<tr>' + ['Kelas','Tingkatan'].map(th).join('') + '</tr>' +
+        belum.map(r => '<tr class="hover:bg-slate-50 transition-colors">' + td(r.k) + td(r.t) + '</tr>').join('') +
+      '</table>' +
+    '</div>';
 }
 
 /* ---------- MUAT DATA ---------- */

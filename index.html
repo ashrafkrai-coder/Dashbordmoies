@@ -10,247 +10,92 @@
 <title>Dashboard Kehadiran Murid</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { brand: { DEFAULT: '#2563eb', soft: '#eff6ff' } },
+        fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','sans-serif'] }
+      }
+    }
+  }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
-  :root{
-    --bg:#f5f6fa;
-    --card:#ffffff;
-    --text:#1a1d2e;
-    --muted:#6b7280;
-    --border:#e5e7eb;
-    --primary:#2563eb;
-    --primary-soft:#eff6ff;
-    --success:#16a34a;
-    --danger:#dc2626;
-    --warn:#f59e0b;
-    --shadow:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-lg:0 10px 25px rgba(0,0,0,0.06);
-    --radius:14px;
-  }
-
-  *{box-sizing:border-box;margin:0;padding:0}
-
-  html,body{height:100%}
-
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    min-height:100vh;
-    min-height:100dvh;
-    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    -webkit-font-smoothing:antialiased;
-  }
-
-  header{
-    position:sticky;
-    top:0;
-    z-index:20;
-    background:var(--card);
-    border-bottom:1px solid var(--border);
-    padding:12px 16px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    flex-wrap:wrap;
-    box-shadow:var(--shadow);
-  }
-
-  .brand{display:flex;align-items:center;gap:10px;min-width:0}
-
-  .school-logo{
-    width:40px;height:40px;object-fit:contain;flex:0 0 auto;
-    border-radius:10px;
-  }
-
-  .brand-text{display:grid;gap:1px;min-width:0}
-
-  .school-name{
-    font-size:15px;font-weight:800;line-height:1.15;
-    color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-
-  header h1{
-    font-size:12px;font-weight:600;color:var(--muted);
-    display:flex;align-items:center;gap:6px;
-  }
-
-  .developer-credit{display:none}
-
-  .header-controls{
-    display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;
-  }
-
-  header input[type="date"]{
-    background:#f9fafb;border:1px solid var(--border);color:var(--text);
-    padding:9px 10px;border-radius:10px;font-size:13px;cursor:pointer;
-    transition:all .15s ease;min-height:40px;min-width:140px;
-    -webkit-appearance:none;appearance:none;
-  }
-
-  header input[type="date"]:hover{border-color:var(--primary)}
-
-  header input[type="date"]:focus{
-    outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,0.12);
-  }
-
-  header button{
-    background:var(--primary);color:#fff;border:0;
-    padding:9px 14px;border-radius:10px;cursor:pointer;
-    font-size:13px;font-weight:600;transition:all .15s ease;
-    display:inline-flex;align-items:center;gap:6px;
-    min-height:40px;min-width:40px;white-space:nowrap;
-    -webkit-tap-highlight-color:transparent;
-  }
-
-  header button:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
-  header button:active{transform:translateY(0)}
-  header button:disabled{opacity:.5;cursor:default;transform:none;filter:none}
-
-  main{
-    padding:14px;max-width:1200px;margin:0 auto;
-    display:grid;gap:12px;padding-bottom:24px;
-  }
-
-  #ralat{
-    display:none;background:#fef2f2;color:var(--danger);
-    padding:10px 14px;border-radius:10px;border:1px solid #fecaca;
-    font-weight:600;font-size:13px;
-  }
-
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-
-  .kpi{
-    background:var(--card);border-radius:var(--radius);padding:14px;
-    box-shadow:var(--shadow);border:1px solid var(--border);
-    display:flex;flex-direction:column;gap:4px;
-  }
-
-  .kpi h3{
-    font-size:11px;color:var(--muted);font-weight:600;
-    text-transform:uppercase;letter-spacing:.4px;
-  }
-
-  .kpi p{
-    font-size:26px;font-weight:800;color:var(--text);line-height:1.1;
-  }
-
-  .card{
-    background:var(--card);border-radius:var(--radius);padding:14px;
-    box-shadow:var(--shadow);border:1px solid var(--border);
-  }
-
-  .card h3{
-    font-size:13px;margin-bottom:10px;color:var(--text);
-    font-weight:700;display:flex;align-items:center;gap:8px;
-  }
-
-  .charts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-
-  canvas{height:300px !important;max-height:none;width:100% !important}
-
-  #chartTingkat{height:320px !important}
-
-  .tables{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-
-  .table-wrapper{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
-
-  table{width:100%;border-collapse:collapse;font-size:12px}
-
-  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
-
-  th{
-    background:#f9fafb;color:var(--muted);font-weight:700;
-    font-size:11px;text-transform:uppercase;letter-spacing:.3px;
-    position:sticky;top:0;
-  }
-
-  tr:last-child td{border-bottom:none}
-
-  tr:hover td{background:#f9fafb}
-
-  td strong{color:var(--text);font-weight:700}
-
-  .empty-msg{text-align:center;padding:20px 12px;color:var(--muted);font-style:italic;font-size:13px}
-
-  @media (max-width:900px){
-    .kpis{grid-template-columns:repeat(2,1fr)}
-    .charts{grid-template-columns:1fr}
-    .tables{grid-template-columns:1fr}
-    canvas{height:260px !important}
-    #chartTingkat{height:290px !important}
-    header{flex-wrap:wrap}
-    .header-controls{width:100%;justify-content:stretch}
-    .header-controls input[type="date"],.header-controls button{flex:1 1 auto}
-  }
-
-  @media (max-width:520px){
-    header{padding:10px 12px;gap:10px}
-    .school-logo{width:34px;height:34px}
-    .school-name{font-size:13px}
-    header h1{font-size:11px}
-    main{padding:10px;gap:10px}
-    .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
-    .kpi{padding:12px}
-    .kpi h3{font-size:10px}
-    .kpi p{font-size:22px}
-    .card{padding:12px}
-    .card h3{font-size:12px;margin-bottom:8px}
-    canvas{height:230px !important}
-    #chartTingkat{height:260px !important}
-    th,td{padding:6px 8px;font-size:11px}
-  }
-
-  @media (min-width:1200px){
-    main{max-width:1320px}
-    canvas{height:340px !important}
-    #chartTingkat{height:360px !important}
-  }
+  body { background:#f5f6fa; }
+  canvas { display:block; }
 </style>
 </head>
-<body>
-<header>
-  <div class="brand">
-    <img class="school-logo" src="Smktm2.png" alt="Logo SMK Taman Medan">
-    <div class="brand-text">
-      <div class="school-name">SMK Taman Medan</div>
-      <h1>Dashboard Kehadiran Murid</h1>
+<body class="font-sans text-slate-800 antialiased">
+<header class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm px-3 sm:px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+  <div class="flex items-center gap-2.5 min-w-0">
+    <img class="school-logo w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain" src="Smktm2.png" alt="Logo SMK Taman Medan">
+    <div class="min-w-0">
+      <div class="school-name text-sm sm:text-[15px] font-extrabold text-slate-800 truncate">SMK Taman Medan</div>
+      <h1 class="text-[11px] sm:text-xs font-semibold text-slate-400 flex items-center gap-1.5">Dashboard Kehadiran Murid</h1>
     </div>
   </div>
-  <div class="header-controls">
-    <input type="date" id="tarikh">
-    <button id="btnRefresh" title="Muat semula data">🔄</button>
-    <button id="btnSet" title="Tetapan API">⚙️</button>
+  <div class="flex items-center gap-2 flex-wrap justify-end">
+    <input type="date" id="tarikh"
+      class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 min-h-[40px] min-w-[140px] focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition cursor-pointer">
+    <button id="btnRefresh" title="Muat semula data"
+      class="bg-brand text-white rounded-xl px-3 py-2 text-sm font-semibold min-h-[40px] min-w-[40px] inline-flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-default transition shadow-sm">🔄</button>
+    <button id="btnSet" title="Tetapan API"
+      class="bg-brand text-white rounded-xl px-3 py-2 text-sm font-semibold min-h-[40px] min-w-[40px] inline-flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-default transition shadow-sm">⚙️</button>
   </div>
 </header>
-<main>
-  <p id="ralat"></p>
-  <section class="kpis">
-    <div class="kpi"><h3>% Kehadiran</h3><p id="kpiPeratus">–</p></div>
-    <div class="kpi"><h3>Hadir / Jumlah</h3><p id="kpiHadir">–</p></div>
-    <div class="kpi"><h3>Tidak Hadir</h3><p id="kpiTidak">–</p></div>
-    <div class="kpi"><h3>Belum Dikemaskini</h3><p id="kpiBelum">–</p></div>
+
+<main class="max-w-[1200px] mx-auto p-3 sm:p-4 grid gap-3 sm:gap-4 pb-6">
+  <p id="ralat" class="hidden bg-red-50 text-red-600 border border-red-200 rounded-xl px-4 py-2.5 text-sm font-semibold"></p>
+
+  <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+    <div class="kpi bg-white rounded-2xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-brand hover:shadow-xl hover:-translate-y-1 hover:border-brand/30 transition-all duration-200">
+      <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">% Kehadiran</h3>
+      <p id="kpiPeratus" class="text-2xl font-extrabold text-slate-800 mt-1">–</p>
+    </div>
+    <div class="kpi bg-white rounded-2xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-emerald-500 hover:shadow-xl hover:-translate-y-1 hover:border-emerald-400/40 transition-all duration-200">
+      <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Hadir / Jumlah</h3>
+      <p id="kpiHadir" class="text-2xl font-extrabold text-slate-800 mt-1">–</p>
+    </div>
+    <div class="kpi bg-white rounded-2xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-red-500 hover:shadow-xl hover:-translate-y-1 hover:border-red-400/40 transition-all duration-200">
+      <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Tidak Hadir</h3>
+      <p id="kpiTidak" class="text-2xl font-extrabold text-slate-800 mt-1">–</p>
+    </div>
+    <div class="kpi bg-white rounded-2xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-amber-500 hover:shadow-xl hover:-translate-y-1 hover:border-amber-400/40 transition-all duration-200">
+      <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Belum Dikemaskini</h3>
+      <p id="kpiBelum" class="text-2xl font-extrabold text-slate-800 mt-1">–</p>
+    </div>
   </section>
-  <section class="charts">
-    <div class="card">
-      <h3>Trend % Kehadiran (30 hari)</h3>
-      <canvas id="chartTrend"></canvas>
+
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+    <div class="card bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-200">
+      <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <span class="w-1 h-4 rounded bg-gradient-to-b from-brand to-brand/50"></span>Trend % Kehadiran (30 hari)
+      </h3>
+      <canvas id="chartTrend" class="w-full h-[230px] sm:h-[280px] lg:h-[300px] xl:h-[340px]"></canvas>
     </div>
-    <div class="card">
-      <h3>Kehadiran Mengikut Tingkatan</h3>
-      <canvas id="chartTingkat"></canvas>
+    <div class="card bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-200">
+      <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <span class="w-1 h-4 rounded bg-gradient-to-b from-brand to-brand/50"></span>Kehadiran Mengikut Tingkatan
+      </h3>
+      <canvas id="chartTingkat" class="w-full h-[260px] sm:h-[320px] lg:h-[340px] xl:h-[360px]"></canvas>
     </div>
   </section>
-  <section class="tables">
-    <div class="card">
-      <h3>10 Kelas Kehadiran Terendah</h3>
-      <div class="table-wrapper"><div id="tblKelas"></div></div>
+
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+    <div class="card bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-200">
+      <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <span class="w-1 h-4 rounded bg-gradient-to-b from-brand to-brand/50"></span>10 Kelas Kehadiran Terendah
+      </h3>
+      <div id="tblKelas"></div>
     </div>
-    <div class="card">
-      <h3>Kelas Belum Dikemaskini</h3>
-      <div class="table-wrapper"><div id="tblBelum"></div></div>
+    <div class="card bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-200">
+      <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <span class="w-1 h-4 rounded bg-gradient-to-b from-brand to-brand/50"></span>Kelas Belum Dikemaskini
+      </h3>
+      <div id="tblBelum"></div>
     </div>
   </section>
 </main>
