@@ -2,7 +2,6 @@ const CFG = {
   api:   localStorage.getItem('api')   || '',
   token: localStorage.getItem('token') || '',
   sheetKelas: 'Kehadiran Kelas',
-  sheetSebab: 'Sebab Tidak Hadir Mengikut Pelajar',
 };
 
 const charts = {};
@@ -111,7 +110,6 @@ function paparDashboard(data) {
   renderTrend(data.sum);
   renderTingkat(data.kelas);
   renderKelas(data.kelas);
-  renderSebab(data.sebab);
 }
 
 /* ---------- RENDER ---------- */
@@ -219,11 +217,13 @@ function renderTrend(s) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 28, right: 12, bottom: 6, left: 8 } },
       scales: {
         y: {
           min: 0,
-          max: 100,
+          max: 105,
+          grace: '5%',
           ticks: {
             font: { weight: 'bold' },
             callback: v => v + '%'
@@ -284,6 +284,12 @@ function renderTingkat(k) {
     if (vb !== null) return 1;
     return a.localeCompare(b);
   });
+  const labelTingkatan = label => {
+    const m = String(label).match(/(\d+|SATU|DUA|TIGA|EMPAT|LIMA)/i);
+    if (!m) return label;
+    const no = urutanTingkatan[m[1].toUpperCase()];
+    return no ? `Ting ${no}` : label;
+  };
 
   const colors = ['#0b3d91', '#1e5ba8', '#2d7bc4', '#3d9bde', '#4dabef', '#5dbfff',
                   '#667eea', '#7a8ff5', '#8da0ff', '#a1b1ff'];
@@ -302,7 +308,7 @@ function renderTingkat(k) {
   buatChart('chartTingkat', {
     type: 'bar',
     data: {
-      labels,
+      labels: labels.map(labelTingkatan),
       datasets: [{
         label: '% Kehadiran',
         data: labels.map(l => grp[l][0] / grp[l][1] * 100),
@@ -315,10 +321,13 @@ function renderTingkat(k) {
     options: {
       indexAxis: 'x',
       responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 34, right: 12, bottom: 4, left: 8 } },
       scales: {
         y: {
           min: 0,
-          max: 100,
+          max: 105,
+          grace: '5%',
           ticks: { font: { weight: 'bold' } }
         }
       },
@@ -364,21 +373,6 @@ function renderKelas(k) {
     '</table></div>';
 }
 
-function renderSebab(s) {
-  if (!s.rows.length) {
-    $('tblSebab').innerHTML = '<p class="empty-msg">Tiada rekod atau tiada data tersedia.</p>';
-    return;
-  }
-
-  const skip = 0;
-  const heads = s.headers.filter((_, i) => i !== skip);
-  $('tblSebab').innerHTML = '<div class="table-wrapper"><table><tr>' + 
-    heads.map(h => `<th>${h}</th>`).join('') + '</tr>' +
-    s.rows.slice(0, 100).map(r =>
-      '<tr>' + r.filter((_, i) => i !== skip).map(c => `<td>${c}</td>`).join('') + '</tr>'
-    ).join('') + '</table></div>';
-}
-
 /* ---------- MUAT DATA ---------- */
 async function muat() {
   $('ralat').style.display = 'none';
@@ -397,13 +391,11 @@ async function muat() {
   }
 
   try {
-    const [kelas, sum, sebab] = await Promise.all([
+    const [kelas, sum] = await Promise.all([
       api({ action: 'sheet', name: CFG.sheetKelas, tarikh: t }),
       api({ action: 'summary' }),
-      api({ action: 'sheet', name: CFG.sheetSebab, tarikh: t })
-        .catch(() => ({ ok: true, headers: [], rows: [] })),
     ]);
-    const data = { kelas, sum, sebab };
+    const data = { kelas, sum };
 
     simpanCache(key, data);
     paparDashboard(data);
