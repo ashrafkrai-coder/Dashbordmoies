@@ -1,5 +1,5 @@
-const CACHE = 'kehadiran-v1';
-const PRECACHE = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg'];
+const CACHE = 'kehadiran-v2';
+const PRECACHE = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'app.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE)));
@@ -18,6 +18,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  if (url.pathname.endsWith('/app.js')) return;
   if (e.request.mode === 'navigate') {
     e.respondWith(caches.match('index.html').then(r => r || fetch(e.request)));
     return;
