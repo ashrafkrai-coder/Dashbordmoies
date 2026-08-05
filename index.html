@@ -55,14 +55,41 @@
     border-bottom:3px solid rgba(255,255,255,0.1);
   }
 
-  header h1{
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:260px;
+  }
+
+  .school-logo{
+    width:58px;
+    height:58px;
+    object-fit:contain;
+    flex:0 0 auto;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+  }
+
+  .brand-text{
+    display:grid;
+    gap:2px;
+  }
+
+  .school-name{
     font-size:20px;
-    font-weight:700;
+    font-weight:800;
+    line-height:1.1;
+    text-transform:uppercase;
+  }
+
+  header h1{
+    font-size:14px;
+    font-weight:600;
     display:flex;
     align-items:center;
     gap:8px;
+    opacity:0.92;
   }
-
   .header-controls{
     display:flex;
     gap:8px;
@@ -122,6 +149,29 @@
   header button:disabled{
     opacity:0.5;
     cursor:default;
+  }
+  @media (max-width:600px){
+    header{
+      align-items:flex-start;
+    }
+
+    .brand{
+      min-width:0;
+      width:100%;
+    }
+
+    .school-logo{
+      width:50px;
+      height:50px;
+    }
+
+    .school-name{
+      font-size:18px;
+    }
+
+    .header-controls{
+      width:100%;
+    }
   }
 
   /* Main */
@@ -423,7 +473,13 @@
 </head>
 <body>
 <header>
-  <h1>📊 Dashboard Kehadiran Murid</h1>
+  <div class="brand">
+    <img class="school-logo" src="Smktm2.png" alt="Logo SMK Taman Medan">
+    <div class="brand-text">
+      <div class="school-name">SMK Taman Medan</div>
+      <h1>Dashboard Kehadiran Murid</h1>
+    </div>
+  </div>
   <div class="header-controls">
     <input type="date" id="tarikh">
     <button id="btnRefresh" title="Muat semula data">🔄 Muat Semula</button>
