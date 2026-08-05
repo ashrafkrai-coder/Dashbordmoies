@@ -222,8 +222,7 @@ function renderTrend(s) {
       scales: {
         y: {
           min: 0,
-          max: 105,
-          grace: '5%',
+          max: 100,
           ticks: {
             font: { weight: 'bold' },
             callback: v => v + '%'
@@ -326,8 +325,7 @@ function renderTingkat(k) {
       scales: {
         y: {
           min: 0,
-          max: 105,
-          grace: '5%',
+          max: 100,
           ticks: { font: { weight: 'bold' } }
         }
       },
