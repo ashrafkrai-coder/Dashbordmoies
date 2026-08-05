@@ -74,8 +74,32 @@ function renderKPI(k) {
 }
 
 function buatChart(id, config) {
-  if (charts[id]) charts[id].destroy();
-  charts[id] = new Chart($(id), config);
+  try {
+    // Destroy existing chart dengan proper cleanup
+    if (charts[id]) {
+      charts[id].destroy();
+      charts[id] = null;
+    }
+    
+    // Get canvas element
+    const canvas = $(id);
+    if (!canvas) {
+      console.error('[App] Canvas element not found:', id);
+      return;
+    }
+    
+    // Reset canvas context jika diperlukan
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Create new chart
+    charts[id] = new Chart(canvas, config);
+    console.log('[App] Chart created:', id);
+  } catch (error) {
+    console.error('[App] Error creating chart:', id, error);
+  }
 }
 
 function renderTrend(s) {
