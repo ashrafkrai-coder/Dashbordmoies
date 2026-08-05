@@ -95,8 +95,8 @@ function renderTrend(s) {
         pointBackgroundColor: '#0b3d91',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius: 5,
+        pointHoverRadius: 7,
       }]
     },
     options: {
@@ -111,7 +111,25 @@ function renderTrend(s) {
       },
       plugins: {
         legend: { display: false },
-        filler: { propagate: true }
+        filler: { propagate: true },
+        datalabels: {
+          anchor: 'top',
+          align: 'top',
+          offset: 10,
+          formatter: v => v.toFixed(1) + '%',
+          font: { 
+            weight: 'bold', 
+            size: 12 
+          },
+          color: '#0b3d91',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          borderRadius: 4,
+          padding: 4,
+          display: (context) => {
+            // Tampilkan label di setiap point (setiap 5 point untuk less clutter)
+            return context.dataIndex % 5 === 0 || context.dataIndex === context.dataset.data.length - 1;
+          }
+        }
       }
     }
   });
@@ -159,7 +177,7 @@ function renderTingkat(k) {
         label: '% Kehadiran',
         data: labels.map(l => grp[l][0] / grp[l][1] * 100),
         backgroundColor: colors.slice(0, labels.length),
-        borderRadius: 6,
+        borderRadius: 8,
         borderSkipped: false,
         borderWidth: 0
       }]
@@ -179,9 +197,18 @@ function renderTingkat(k) {
         datalabels: {
           anchor: 'end',
           align: 'top',
+          offset: 8,
           formatter: v => typeof v === 'number' ? v.toFixed(1) + '%' : v,
-          font: { weight: 'bold', size: 11 },
-          color: '#0b3d91'
+          font: { 
+            weight: 'bold', 
+            size: 13 
+          },
+          color: '#0b3d91',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: 4,
+          padding: 6,
+          borderWidth: 1,
+          borderColor: '#0b3d91'
         }
       }
     }
