@@ -1,6 +1,10 @@
+// Tetapan kongsi (read-only) — isi sekali sahaja, kemudian orang lain terus boleh lihat
+const DEFAULT_API = '';    // <-- tampal URL Apps Script (/exec) di sini
+const DEFAULT_TOKEN = '';  // <-- tampal token read-only di sini
+
 const CFG = {
-  api:   localStorage.getItem('api')   || '',
-  token: localStorage.getItem('token') || '',
+  api:   localStorage.getItem('api')   || DEFAULT_API,
+  token: localStorage.getItem('token') || DEFAULT_TOKEN,
   sheetKelas: 'Kehadiran Kelas',
 };
 const charts = {};
