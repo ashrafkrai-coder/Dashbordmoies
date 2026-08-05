@@ -6,6 +6,7 @@ const CFG = {
 };
 const charts = {};
 const $ = id => document.getElementById(id);
+if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
 
 /* ---------- UTILITI ---------- */
 function hariIniDDMM() {
@@ -80,7 +81,22 @@ function renderTingkat(k) {
     const g = grp[r[iT]] = grp[r[iT]] || [0, 0];
     g[0] += +m[1]; g[1] += +m[2];
   });
-  const labels = Object.keys(grp).sort();
+  const urutanTingkatan = {
+    'SATU': 1, 'DUA': 2, 'TIGA': 3, 'EMPAT': 4, 'LIMA': 5,
+    'SIX': 6, 'SEVEN': 7, 'EIGHT': 8, 'NINE': 9, 'TEN': 10,
+    '1': 1, '2': 2, '3': 3, '4': 4, '5': 5,
+    '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+  };
+  const labels = Object.keys(grp).sort((a, b) => {
+    const ma = a.match(/(\d+|SATU|DUA|TIGA|EMPAT|LIMA|SIX|SEVEN|EIGHT|NINE|TEN)/i);
+    const mb = b.match(/(\d+|SATU|DUA|TIGA|EMPAT|LIMA|SIX|SEVEN|EIGHT|NINE|TEN)/i);
+    const va = ma ? urutanTingkatan[ma[1].toUpperCase()] : null;
+    const vb = mb ? urutanTingkatan[mb[1].toUpperCase()] : null;
+    if (va !== null && vb !== null) return va - vb;
+    if (va !== null) return -1;
+    if (vb !== null) return 1;
+    return a.localeCompare(b);
+  });
   buatChart('chartTingkat', {
     type: 'bar',
     data: {
