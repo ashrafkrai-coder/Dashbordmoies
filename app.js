@@ -121,7 +121,8 @@ function renderTingkat(k) {
           align: 'top',
           formatter: v => typeof v === 'number' ? v.toFixed(1) + '%' : v,
           font: { weight: 'bold', size: 12 },
-          color: '#0b3d91'
+          color: '#0b3d91',
+          clip: false
         }
       }
     }
