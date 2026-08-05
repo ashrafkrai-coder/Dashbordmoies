@@ -51,14 +51,21 @@ function tarikhPilihan() {
 async function api(params, cuba = 2) {
   const url = `${CFG.api}?token=${encodeURIComponent(CFG.token)}&` +
     new URLSearchParams(params);
+  const key = cacheKey('api', params);
+
   for (let i = 0; i < cuba; i++) {
     try {
       const r = await fetch(url);
       const j = await r.json();
       if (!j.ok) throw new Error(j.ralat || 'Ralat API');
+      simpanCache(key, j);
       return j;
     } catch (e) {
-      if (i === cuba - 1) throw e;
+      if (i === cuba - 1) {
+        const cached = bacaCache(key);
+        if (cached) return cached.data;
+        throw e;
+      }
       await new Promise(res => setTimeout(res, 1500));
     }
   }
@@ -66,6 +73,45 @@ async function api(params, cuba = 2) {
 
 function idx(headers, regex) {
   return headers.findIndex(h => regex.test(h));
+}
+
+const DATA_CACHE_PREFIX = 'kehadiran:data:';
+const DATA_CACHE_TTL = 1000 * 60 * 60 * 12;
+
+function cacheKey(name, params = {}) {
+  return DATA_CACHE_PREFIX + name + ':' + CFG.api + ':' + CFG.token + ':' + JSON.stringify(params);
+}
+
+function bacaCache(key) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(key) || 'null');
+    if (!cached || !cached.data) return null;
+    return cached;
+  } catch (error) {
+    console.warn('[App] Cache rosak:', key, error);
+    localStorage.removeItem(key);
+    return null;
+  }
+}
+
+function simpanCache(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
+  } catch (error) {
+    console.warn('[App] Gagal simpan cache:', error);
+  }
+}
+
+function cacheMasihSegar(cached) {
+  return cached && Date.now() - cached.savedAt < DATA_CACHE_TTL;
+}
+
+function paparDashboard(data) {
+  renderKPI(data.kelas);
+  renderTrend(data.sum);
+  renderTingkat(data.kelas);
+  renderKelas(data.kelas);
+  renderSebab(data.sebab);
 }
 
 /* ---------- RENDER ---------- */
@@ -339,6 +385,17 @@ async function muat() {
   if (!CFG.api || !CFG.token) return tetapan();
 
   const t = tarikhPilihan();
+  const key = cacheKey('dashboard', { tarikh: t });
+  const cached = bacaCache(key);
+
+  if (cached) {
+    paparDashboard(cached.data);
+    if (!cacheMasihSegar(cached)) {
+      $('ralat').textContent = 'Memaparkan data simpanan lokal sementara menunggu kemaskini...';
+      $('ralat').style.display = 'block';
+    }
+  }
+
   try {
     const [kelas, sum, sebab] = await Promise.all([
       api({ action: 'sheet', name: CFG.sheetKelas, tarikh: t }),
@@ -346,13 +403,18 @@ async function muat() {
       api({ action: 'sheet', name: CFG.sheetSebab, tarikh: t })
         .catch(() => ({ ok: true, headers: [], rows: [] })),
     ]);
+    const data = { kelas, sum, sebab };
 
-    renderKPI(kelas);
-    renderTrend(sum);
-    renderTingkat(kelas);
-    renderKelas(kelas);
-    renderSebab(sebab);
+    simpanCache(key, data);
+    paparDashboard(data);
+    $('ralat').style.display = 'none';
   } catch (e) {
+    if (cached) {
+      $('ralat').textContent = 'Guna data simpanan lokal. Kemaskini gagal: ' + e.message;
+      $('ralat').style.display = 'block';
+      return;
+    }
+
     $('ralat').textContent = '⚠ ' + e.message;
     $('ralat').style.display = 'block';
   }
