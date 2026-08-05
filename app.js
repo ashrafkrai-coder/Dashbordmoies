@@ -1,12 +1,19 @@
-// Tetapan kongsi (read-only) — isi sekali sahaja, kemudian orang lain terus boleh lihat
-const DEFAULT_API = 'https://script.google.com/macros/s/AKfycbwip22NBIdDmsCxuwypcDrHSbd3ZNnzzNdJJPP6DrHZLw4fCo7iQlJ0H15ivZiqCise/exec';
-const DEFAULT_TOKEN = 'BEA8613@TM';
+// Tetapan kongsi Supabase — isi sekali sahaja
+const DEFAULT_SUPABASE_URL = 'https://gwjyhddctyxzkfdwenwd.supabase.co';                  // ← URL project anda
+const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3anloZGRjdHl4emtmZHdlbndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5Mjg2MzMsImV4cCI6MjEwMTUwNDYzM30.HdL7db4InLkwQZKd1teEdIDlrUf9seN2NYAd5dplJf4';                 // ← anon key anda
 
 const CFG = {
-  api:   localStorage.getItem('api')   || DEFAULT_API,
-  token: localStorage.getItem('token') || DEFAULT_TOKEN,
-  sheetKelas: 'Kehadiran Kelas',
+  url: localStorage.getItem('supa_url') || DEFAULT_SUPABASE_URL,
+  key: localStorage.getItem('supa_key') || DEFAULT_SUPABASE_KEY,
 };
+
+let supa = null;
+try {
+  if (typeof supabase !== 'undefined') {
+    supa = supabase.createClient(CFG.url, CFG.key);
+  }
+} catch (e) { console.error('Supabase init gagal:', e); }
+
 const charts = {};
 const $ = id => document.getElementById(id);
 if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
@@ -25,33 +32,6 @@ function tarikhPilihan() {
   return `${d}/${m}/${y}`;
 }
 
-async function api(params, cuba = 2) {
-  const url = `${CFG.api}?token=${encodeURIComponent(CFG.token)}&` +
-    new URLSearchParams(params);
-  let lastErr;
-  for (let i = 0; i < cuba; i++) {
-    try {
-      const r = await fetch(url);
-      const text = await r.text();
-      let j;
-      try {
-        j = JSON.parse(text);
-      } catch {
-        throw new Error('Respons bukan JSON. Mungkin token tidak sah, skrip Apps Script ralat, atau kuota penuh.');
-      }
-      if (!j.ok) throw new Error(j.ralat || 'Ralat API');
-      return j;
-    } catch (e) {
-      lastErr = e;
-      if (i === cuba - 1) break;
-      await new Promise(res => setTimeout(res, 1500));
-    }
-  }
-  throw lastErr;
-}
-
-function idx(headers, regex) { return headers.findIndex(h => regex.test(h)); }
-
 function namaTingkatan(label) {
   const map = {
     'SATU': 'Ting 1', 'DUA': 'Ting 2', 'TIGA': 'Ting 3',
@@ -68,7 +48,65 @@ function namaTingkatan(label) {
   return map[m[1].toUpperCase()] || label;
 }
 
-/* ---------- RENDER ---------- */
+function formatTarikh(s) {
+  if (s == null) return '';
+  const parts = String(s).split(/[-/]/).filter(Boolean);
+  if (parts.length !== 3) return String(s);
+  let [a, b, c] = parts;
+  if (a.length === 4) [a, b, c] = [c, b, a];
+  const pad = x => String(x).padStart(2, '0');
+  return `${pad(a)}/${pad(b)}/${c}`;
+}
+
+/* ---------- TRANSFORM: Supabase → shape lama (headers + rows) ---------- */
+// Kekalkan shape yang sama supaya semua render function sedia ada jalan
+
+function toShapeKelas(records) {
+  const headers = ['Tarikh', 'Kelas', 'Tingkatan', 'Guru', 'Jumlah Pelajar', 'Status Kehadiran', 'Masa Kemaskini'];
+  const rows = records.map(r => [
+    r.tarikh || '',
+    r.nama_kelas || '',
+    r.tingkatan || '',
+    r.nama_guru || '',
+    `${r.hadir || 0}/${r.jumlah || 0}`,       // format "30/36"
+    r.status_kehadiran || '',
+    r.masa_kemaskini || ''
+  ]);
+  return { headers, rows };
+}
+
+function toShapeSummary(records) {
+  const headers = ['Tarikh', 'Hadir', 'Jumlah', 'Peratus', 'Kelas Siap', 'Kelas Belum'];
+  const rows = records.map(r => [
+    r.tarikh, r.hadir, r.jumlah, r.peratus, r.kelas_siap, r.kelas_belum
+  ]);
+  return { headers, rows };
+}
+
+/* ---------- FETCH DATA DARI SUPABASE ---------- */
+async function ambilDataKelas(tarikh) {
+  if (!supa) throw new Error('Supabase client tidak dijumpai. Pastikan index.html ada load supabase-js.');
+  const { data, error } = await supa
+    .from('kehadiran_kelas')
+    .select('*')
+    .eq('tarikh', tarikh)
+    .order('nama_kelas', { ascending: true });
+  if (error) throw new Error(error.message);
+  return toShapeKelas(data || []);
+}
+
+async function ambilDataSummary() {
+  if (!supa) throw new Error('Supabase client tidak dijumpai.');
+  const { data, error } = await supa
+    .from('summary')
+    .select('*')
+    .order('tarikh', { ascending: true })
+    .limit(1000);
+  if (error) throw new Error(error.message);
+  return toShapeSummary(data || []);
+}
+
+/* ---------- RENDER (SAMA SEPERTI ASAL) ---------- */
 function renderKPI(k) {
   const iJ = idx(k.headers, /jumlah/i), iS = idx(k.headers, /kehadiran/i);
   let hadir = 0, jumlah = 0, belum = 0;
@@ -86,16 +124,6 @@ function renderKPI(k) {
 function buatChart(id, config) {
   if (charts[id]) charts[id].destroy();
   charts[id] = new Chart($(id), config);
-}
-
-function formatTarikh(s) {
-  if (s == null) return '';
-  const parts = String(s).split(/[-/]/).filter(Boolean);
-  if (parts.length !== 3) return String(s);
-  let [a, b, c] = parts;
-  if (a.length === 4) [a, b, c] = [c, b, a]; // tahun dulu -> susun semula
-  const pad = x => String(x).padStart(2, '0');
-  return `${pad(a)}/${pad(b)}/${c}`;
 }
 
 function renderTrend(s) {
@@ -159,9 +187,9 @@ function renderTingkat(k) {
           const { ctx: c, chartArea } = chart;
           if (!chartArea) return '#2563eb';
           const v = data[dataIndex] || 0;
-          const t = Math.max(0, Math.min(100, v)) / 100; // 0..1
-          const topL = 62 - t * 22;   // % tinggi -> lebih terang di puncak
-          const botL = 46 - t * 20;   // % tinggi -> lebih pekat di bawah
+          const t = Math.max(0, Math.min(100, v)) / 100;
+          const topL = 62 - t * 22;
+          const botL = 46 - t * 20;
           const g = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
           g.addColorStop(0, `hsl(217 91% ${botL}%)`);
           g.addColorStop(1, `hsl(217 91% ${topL}%)`);
@@ -211,6 +239,8 @@ function renderTingkat(k) {
   });
 }
 
+function idx(headers, regex) { return headers.findIndex(h => regex.test(h)); }
+
 function renderKelas(k) {
   const iK = idx(k.headers, /^kelas$/i) >= 0 ? idx(k.headers, /^kelas$/i) : idx(k.headers, /kelas/i);
   const iT = idx(k.headers, /tingkatan/i), iJ = idx(k.headers, /jumlah/i);
@@ -256,12 +286,12 @@ function renderBelumKemas(k) {
 /* ---------- MUAT DATA ---------- */
 async function muat() {
   $('ralat').style.display = 'none';
-  if (!CFG.api || !CFG.token) return tetapan();
+  if (!supa || !CFG.url || !CFG.key) { tetapan(); return; }
   const t = tarikhPilihan();
   try {
     const [kelas, sum] = await Promise.all([
-      api({ action: 'sheet', name: CFG.sheetKelas, tarikh: t }),
-      api({ action: 'summary' }),
+      ambilDataKelas(t),
+      ambilDataSummary(),
     ]);
     renderKPI(kelas); renderTrend(sum); renderTingkat(kelas);
     renderKelas(kelas); renderBelumKemas(kelas);
@@ -272,10 +302,11 @@ async function muat() {
 }
 
 function tetapan() {
-  const a = prompt('URL Apps Script (/exec):', CFG.api);
-  if (a) { CFG.api = a.trim(); localStorage.setItem('api', CFG.api); }
-  const t = prompt('Token:', CFG.token);
-  if (t) { CFG.token = t.trim(); localStorage.setItem('token', CFG.token); }
+  const a = prompt('Supabase Project URL:', CFG.url);
+  if (a) { CFG.url = a.trim(); localStorage.setItem('supa_url', CFG.url); }
+  const k = prompt('Supabase Anon Key:', CFG.key);
+  if (k) { CFG.key = k.trim(); localStorage.setItem('supa_key', CFG.key); }
+  try { supa = supabase.createClient(CFG.url, CFG.key); } catch(e) {}
   muat();
 }
 
