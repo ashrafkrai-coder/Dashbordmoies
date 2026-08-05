@@ -58,6 +58,16 @@ function formatTarikh(s) {
   return `${pad(a)}/${pad(b)}/${c}`;
 }
 
+function formatTarikhPendek(s) {
+  if (s == null) return '';
+  const parts = String(s).split(/[-/]/).filter(Boolean);
+  if (parts.length !== 3) return String(s);
+  let [a, b, c] = parts;
+  if (a.length === 4) [a, b, c] = [c, b, a]; // a=hari, b=bulan
+  const pad = x => String(x).padStart(2, '0');
+  return `${pad(a)}/${pad(b)}`;
+}
+
 /* ---------- TRANSFORM: Supabase → shape lama (headers + rows) ---------- */
 // Kekalkan shape yang sama supaya semua render function sedia ada jalan
 
@@ -131,7 +141,7 @@ function renderTrend(s) {
   buatChart('chartTrend', {
     type: 'line',
     data: {
-      labels: rows.map(r => formatTarikh(r[0])),
+      labels: rows.map(r => formatTarikhPendek(r[0])),
       datasets: [{ label: '% Kehadiran', data: rows.map(r => r[3]),
         borderColor: '#0b3d91', backgroundColor: '#0b3d9122', fill: true, tension: .3,
         pointRadius: 3, pointBackgroundColor: '#0b3d91' }]
