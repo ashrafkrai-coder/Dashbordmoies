@@ -83,7 +83,13 @@ function renderTrend(s) {
       datasets: [{ label: '% Kehadiran', data: rows.map(r => r[3]),
         borderColor: '#0b3d91', backgroundColor: '#0b3d9122', fill: true, tension: .3 }]
     },
-    options: { scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
+    options: {
+      scales: {
+        y: { min: 0, max: 100 },
+        x: { ticks: { maxRotation: 0, autoSkip: true, autoSkipPadding: 20 } }
+      },
+      plugins: { legend: { display: false } }
+    }
   });
 }
 
