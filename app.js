@@ -75,12 +75,14 @@ function buatChart(id, config) {
   charts[id] = new Chart($(id), config);
 }
 
-function formatTarikh(iso) {
-  const parts = iso.split('-');
-  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-  const p = iso.split('/');
-  if (p.length === 3) return `${p[0].padStart(2, '0')}/${p[1].padStart(2, '0')}/${p[2]}`;
-  return iso;
+function formatTarikh(s) {
+  if (s == null) return '';
+  const parts = String(s).split(/[-/]/).filter(Boolean);
+  if (parts.length !== 3) return String(s);
+  let [a, b, c] = parts;
+  if (a.length === 4) [a, b, c] = [c, b, a]; // tahun dulu -> susun semula
+  const pad = x => String(x).padStart(2, '0');
+  return `${pad(a)}/${pad(b)}/${c}`;
 }
 
 function renderTrend(s) {
@@ -158,7 +160,7 @@ function renderTingkat(k) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: 16 } },
+      layout: { padding: { top: 30 } },
       scales: {
         y: {
           min: 0, max: 100,
