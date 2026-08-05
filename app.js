@@ -15,6 +15,13 @@ function hariIniDDMM() {
     .map(x => String(x).padStart(2, '0')).join('/');
 }
 
+function formatTarikh(iso) {
+  const parts = iso.split('-');
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  const p = iso.split('/');
+  if (p.length === 3) return `${p[0].padStart(2, '0')}/${p[1].padStart(2, '0')}/${p[2]}`;
+  return iso;
+}
 function tarikhPilihan() {
   const v = $('tarikh').value;                 // yyyy-mm-dd
   if (!v) return hariIniDDMM();
@@ -65,7 +72,7 @@ function renderTrend(s) {
   buatChart('chartTrend', {
     type: 'line',
     data: {
-      labels: rows.map(r => r[0]),
+      labels: rows.map(r => formatTarikh(r[0])),
       datasets: [{ label: '% Kehadiran', data: rows.map(r => r[3]),
         borderColor: '#0b3d91', backgroundColor: '#0b3d9122', fill: true, tension: .3 }]
     },
