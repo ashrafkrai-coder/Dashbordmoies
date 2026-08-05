@@ -4,679 +4,209 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
 <title>Dashboard Kehadiran Murid</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0b3d91">
 <link rel="icon" href="icon.svg">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
   :root{
-    --biru:#0b3d91;
-    --biru-gelap:#0a2e70;
-    --biru-cerah:#1e5ba8;
-    --hijau:#27ae60;
-    --merah:#e74c3c;
-    --kuning:#f39c12;
-    --ungu:#9b59b6;
-    --bg:#f0f3f8;
-    --bg-card:#ffffff;
-    --shadow-sm:0 2px 8px rgba(0,0,0,0.08);
-    --shadow-md:0 4px 12px rgba(0,0,0,0.12);
+    --bg:#f5f6fa;
+    --card:#ffffff;
+    --text:#1a1d2e;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --primary:#2563eb;
+    --primary-soft:#eff6ff;
+    --success:#16a34a;
+    --danger:#dc2626;
+    --warn:#f59e0b;
+    --shadow:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:0 10px 25px rgba(0,0,0,0.06);
+    --radius:14px;
   }
 
-  *{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-  }
+  *{box-sizing:border-box;margin:0;padding:0}
 
-  html,body{
-    height:100%;
-  }
+  html,body{height:100%}
 
   body{
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
-    background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-    color:#222;
+    background:var(--bg);
+    color:var(--text);
     min-height:100vh;
+    min-height:100dvh;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-font-smoothing:antialiased;
   }
 
-  /* Header */
   header{
-    background:linear-gradient(135deg,var(--biru) 0%,var(--biru-gelap) 100%);
-    color:#fff;
-    padding:16px;
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:var(--card);
+    border-bottom:1px solid var(--border);
+    padding:12px 16px;
     display:flex;
-    justify-content:space-between;
     align-items:center;
+    justify-content:space-between;
     gap:12px;
     flex-wrap:wrap;
-    box-shadow:var(--shadow-md);
-    border-bottom:3px solid rgba(255,255,255,0.1);
+    box-shadow:var(--shadow);
   }
 
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    min-width:260px;
-  }
+  .brand{display:flex;align-items:center;gap:10px;min-width:0}
 
   .school-logo{
-    width:58px;
-    height:58px;
-    object-fit:contain;
-    flex:0 0 auto;
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    width:40px;height:40px;object-fit:contain;flex:0 0 auto;
+    border-radius:10px;
   }
 
-  .brand-text{
-    display:grid;
-    gap:2px;
-  }
+  .brand-text{display:grid;gap:1px;min-width:0}
 
   .school-name{
-    font-size:20px;
-    font-weight:800;
-    line-height:1.1;
-    text-transform:uppercase;
+    font-size:15px;font-weight:800;line-height:1.15;
+    color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
 
   header h1{
-    font-size:14px;
-    font-weight:600;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    opacity:0.92;
+    font-size:12px;font-weight:600;color:var(--muted);
+    display:flex;align-items:center;gap:6px;
   }
 
-  .developer-credit{
-    font-size:11px;
-    font-weight:500;
-    color:rgba(255,255,255,0.72);
-    line-height:1.2;
-  }
+  .developer-credit{display:none}
+
   .header-controls{
-    display:flex;
-    gap:8px;
-    align-items:center;
-    flex-wrap:wrap;
+    display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;
   }
 
   header input[type="date"]{
-    background:rgba(255,255,255,0.15);
-    border:1px solid rgba(255,255,255,0.3);
-    color:#fff;
-    padding:10px 12px;
-    border-radius:8px;
-    font-size:14px;
-    cursor:pointer;
-    transition:all 0.2s ease;
-    min-height:44px;
-    -webkit-appearance:none;
-    appearance:none;
+    background:#f9fafb;border:1px solid var(--border);color:var(--text);
+    padding:9px 10px;border-radius:10px;font-size:13px;cursor:pointer;
+    transition:all .15s ease;min-height:40px;min-width:140px;
+    -webkit-appearance:none;appearance:none;
   }
 
-  header input[type="date"]:hover{
-    background:rgba(255,255,255,0.25);
-  }
+  header input[type="date"]:hover{border-color:var(--primary)}
 
   header input[type="date"]:focus{
-    outline:none;
-    box-shadow:0 0 0 3px rgba(255,255,255,0.2);
-  }
-
-  header input[type="date"]::placeholder{
-    color:rgba(255,255,255,0.7);
+    outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,0.12);
   }
 
   header button{
-    background:rgba(255,255,255,0.15);
-    border:1px solid rgba(255,255,255,0.3);
-    color:#fff;
-    padding:10px 14px;
-    border-radius:8px;
-    cursor:pointer;
-    font-size:14px;
-    font-weight:600;
-    transition:all 0.2s ease;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:4px;
-    min-height:44px;
-    min-width:44px;
+    background:var(--primary);color:#fff;border:0;
+    padding:9px 14px;border-radius:10px;cursor:pointer;
+    font-size:13px;font-weight:600;transition:all .15s ease;
+    display:inline-flex;align-items:center;gap:6px;
+    min-height:40px;min-width:40px;white-space:nowrap;
     -webkit-tap-highlight-color:transparent;
   }
 
-  header button:hover{
-    background:rgba(255,255,255,0.25);
-    transform:translateY(-1px);
-    box-shadow:0 2px 8px rgba(0,0,0,0.15);
-  }
+  header button:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+  header button:active{transform:translateY(0)}
+  header button:disabled{opacity:.5;cursor:default;transform:none;filter:none}
 
-  header button:active{
-    transform:translateY(0);
-  }
-
-  header button:disabled{
-    opacity:0.5;
-    cursor:default;
-  }
-
-  /* Main */
   main{
-    padding:16px;
-    max-width:1200px;
-    margin:auto;
-    display:grid;
-    gap:16px;
-    padding-bottom:40px;
-  }
-  @media (max-width:768px){
-    main{
-      padding:12px;
-      gap:12px;
-    }
-
-    header{
-      flex-direction:column;
-      align-items:stretch;
-      padding:12px;
-    }
-
-    .brand{
-      min-width:0;
-      width:100%;
-    }
-
-    .school-logo{
-      width:48px;
-      height:48px;
-    }
-
-    .school-name{
-      font-size:16px;
-    }
-
-    header h1{
-      font-size:13px;
-    }
-
-    .developer-credit{
-      font-size:10px;
-    }
-
-    .header-controls{
-      width:100%;
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-
-    .header-controls input[type="date"],
-    .header-controls button{
-      flex:1 1 auto;
-      min-width:0;
-      font-size:13px;
-      padding:10px 12px;
-    }
-
-    .kpis{
-      grid-template-columns:repeat(2,1fr);
-      gap:10px;
-    }
-
-    .kpi{
-      padding:12px;
-    }
-
-    .kpi h3{
-      font-size:10px;
-    }
-
-    .kpi p{
-      font-size:22px;
-    }
-
-    .charts{
-      grid-template-columns:1fr;
-      gap:12px;
-    }
-
-    .card{
-      padding:12px;
-    }
-
-    .card h3{
-      font-size:13px;
-    }
-
-    canvas{
-      height:280px !important;
-    }
-
-    #chartTingkat{
-      height:320px !important;
-    }
-
-    table{
-      font-size:11px;
-    }
-
-    th,td{
-      padding:6px 8px;
-    }
+    padding:14px;max-width:1200px;margin:0 auto;
+    display:grid;gap:12px;padding-bottom:24px;
   }
 
-  @media (max-width:480px){
-    header{
-      padding:10px;
-    }
-
-    .school-logo{
-      width:40px;
-      height:40px;
-    }
-
-    .school-name{
-      font-size:14px;
-    }
-
-    header h1{
-      font-size:12px;
-    }
-
-    .header-controls{
-      flex-direction:column;
-    }
-
-    .header-controls input[type="date"],
-    .header-controls button{
-      width:100%;
-      font-size:13px;
-    }
-
-    .kpis{
-      grid-template-columns:1fr;
-      gap:8px;
-    }
-
-    .kpi{
-      padding:10px;
-    }
-
-    .kpi h3{
-      font-size:10px;
-    }
-
-    .kpi p{
-      font-size:20px;
-    }
-
-    .card{
-      padding:10px;
-    }
-
-    .card h3{
-      font-size:12px;
-      margin-bottom:8px;
-    }
-
-    canvas{
-      height:240px !important;
-    }
-
-    #chartTingkat{
-      height:280px !important;
-    }
-
-    table{
-      font-size:10px;
-    }
-
-    th,td{
-      padding:5px 6px;
-    }
-  }
-
-  @media (max-width:360px){
-    .school-logo{
-      width:36px;
-      height:36px;
-    }
-
-    .school-name{
-      font-size:13px;
-    }
-
-    header h1{
-      font-size:11px;
-    }
-
-    .kpi p{
-      font-size:18px;
-    }
-
-    canvas{
-      height:220px !important;
-    }
-
-    #chartTingkat{
-      height:260px !important;
-    }
-  }
-
-  @media (min-width:481px) and (max-width:768px){
-    .kpis{
-      grid-template-columns:repeat(2,1fr);
-    }
-
-    .charts{
-      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    }
-
-    canvas{
-      height:300px !important;
-    }
-
-    #chartTingkat{
-      height:340px !important;
-    }
-  }
-
-  @media (min-width:1200px){
-    main{
-      max-width:1400px;
-    }
-
-    canvas{
-      height:380px !important;
-    }
-
-    #chartTingkat{
-      height:420px !important;
-    }
-  }
-
-  /* Alert */
   #ralat{
-    display:none;
-    background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);
-    color:#fff;
-    padding:12px 16px;
-    border-radius:8px;
-    box-shadow:var(--shadow-md);
-    border-left:4px solid #fff;
-    font-weight:600;
-    animation:slideDown 0.3s ease;
+    display:none;background:#fef2f2;color:var(--danger);
+    padding:10px 14px;border-radius:10px;border:1px solid #fecaca;
+    font-weight:600;font-size:13px;
   }
 
-  @keyframes slideDown{
-    from{
-      opacity:0;
-      transform:translateY(-10px);
-    }
-    to{
-      opacity:1;
-      transform:translateY(0);
-    }
-  }
-
-  /* KPI Grid */
-  .kpis{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-    gap:12px;
-  }
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 
   .kpi{
-    background:var(--bg-card);
-    border-radius:12px;
-    padding:16px;
-    box-shadow:var(--shadow-sm);
-    border-left:4px solid var(--biru);
-    transition:all 0.3s ease;
-    position:relative;
-    overflow:hidden;
-  }
-
-  .kpi::before{
-    content:'';
-    position:absolute;
-    top:0;
-    right:0;
-    width:60px;
-    height:60px;
-    background:radial-gradient(circle,rgba(102,126,234,0.1) 0%,rgba(102,126,234,0) 70%);
-    border-radius:50%;
-    pointer-events:none;
-  }
-
-  .kpi:hover{
-    transform:translateY(-4px);
-    box-shadow:var(--shadow-md);
-  }
-
-  .kpi:nth-child(2){
-    border-left-color:var(--hijau);
-  }
-
-  .kpi:nth-child(3){
-    border-left-color:var(--merah);
-  }
-
-  .kpi:nth-child(4){
-    border-left-color:var(--kuning);
+    background:var(--card);border-radius:var(--radius);padding:14px;
+    box-shadow:var(--shadow);border:1px solid var(--border);
+    display:flex;flex-direction:column;gap:4px;
   }
 
   .kpi h3{
-    font-size:11px;
-    color:#888;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:0.5px;
-    margin-bottom:8px;
+    font-size:11px;color:var(--muted);font-weight:600;
+    text-transform:uppercase;letter-spacing:.4px;
   }
 
   .kpi p{
-    font-size:28px;
-    font-weight:800;
-    background:linear-gradient(135deg,var(--biru),var(--ungu));
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    background-clip:text;
+    font-size:26px;font-weight:800;color:var(--text);line-height:1.1;
   }
 
-  .kpi:nth-child(2) p{
-    background:linear-gradient(135deg,var(--hijau),#229954);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    background-clip:text;
-  }
-
-  .kpi:nth-child(3) p{
-    background:linear-gradient(135deg,var(--merah),#c0392b);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    background-clip:text;
-  }
-
-  .kpi:nth-child(4) p{
-    background:linear-gradient(135deg,var(--kuning),#e67e22);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    background-clip:text;
-  }
-
-  /* Cards */
   .card{
-    background:var(--bg-card);
-    border-radius:12px;
-    padding:16px;
-    box-shadow:var(--shadow-sm);
-    border:1px solid rgba(102,126,234,0.05);
-    transition:all 0.3s ease;
-  }
-
-  .card:hover{
-    box-shadow:var(--shadow-md);
+    background:var(--card);border-radius:var(--radius);padding:14px;
+    box-shadow:var(--shadow);border:1px solid var(--border);
   }
 
   .card h3{
-    font-size:14px;
-    margin-bottom:12px;
-    color:#222;
-    font-weight:700;
-    display:flex;
-    align-items:center;
-    gap:8px;
+    font-size:13px;margin-bottom:10px;color:var(--text);
+    font-weight:700;display:flex;align-items:center;gap:8px;
   }
 
-  .card h3::before{
-    content:'';
-    width:3px;
-    height:18px;
-    background:linear-gradient(180deg,var(--biru),var(--ungu));
-    border-radius:2px;
-  }
+  .charts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 
-  /* Charts */
-  .charts{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-    gap:16px;
-  }
+  canvas{height:300px !important;max-height:none;width:100% !important}
 
-  canvas{
-    height:340px !important;
-    max-height:none;
-  }
+  #chartTingkat{height:320px !important}
 
-  #chartTingkat{
-    height:380px !important;
-  }
+  .tables{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 
-  /* Tables */
-  .table-wrapper{
-    overflow-x:auto;
-    border-radius:8px;
-  }
+  .table-wrapper{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
 
-  table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:12px;
-  }
+  table{width:100%;border-collapse:collapse;font-size:12px}
 
-  th,td{
-    padding:10px 12px;
-    text-align:left;
-    border-bottom:1px solid #ecf0f1;
-  }
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
 
   th{
-    background:linear-gradient(180deg,#f8f9fa 0%,#f1f3f5 100%);
-    color:#222;
-    font-weight:700;
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:0.5px;
-    border-bottom:2px solid #e0e0e0;
+    background:#f9fafb;color:var(--muted);font-weight:700;
+    font-size:11px;text-transform:uppercase;letter-spacing:.3px;
+    position:sticky;top:0;
   }
 
-  tr:hover{
-    background:rgba(102,126,234,0.04);
+  tr:last-child td{border-bottom:none}
+
+  tr:hover td{background:#f9fafb}
+
+  td strong{color:var(--text);font-weight:700}
+
+  .empty-msg{text-align:center;padding:20px 12px;color:var(--muted);font-style:italic;font-size:13px}
+
+  @media (max-width:900px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .charts{grid-template-columns:1fr}
+    .tables{grid-template-columns:1fr}
+    canvas{height:260px !important}
+    #chartTingkat{height:290px !important}
+    header{flex-wrap:wrap}
+    .header-controls{width:100%;justify-content:stretch}
+    .header-controls input[type="date"],.header-controls button{flex:1 1 auto}
   }
 
-  td strong{
-    color:var(--biru);
-    font-weight:700;
+  @media (max-width:520px){
+    header{padding:10px 12px;gap:10px}
+    .school-logo{width:34px;height:34px}
+    .school-name{font-size:13px}
+    header h1{font-size:11px}
+    main{padding:10px;gap:10px}
+    .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
+    .kpi{padding:12px}
+    .kpi h3{font-size:10px}
+    .kpi p{font-size:22px}
+    .card{padding:12px}
+    .card h3{font-size:12px;margin-bottom:8px}
+    canvas{height:230px !important}
+    #chartTingkat{height:260px !important}
+    th,td{padding:6px 8px;font-size:11px}
   }
 
-  .empty-msg{
-    text-align:center;
-    padding:24px 12px;
-    color:#999;
-    font-style:italic;
-  }
-
-  @media (orientation: landscape) and (max-height: 500px) {
-    header{
-      padding:8px 12px;
-    }
-
-    .school-logo{
-      width:36px;
-      height:36px;
-    }
-
-    .school-name{
-      font-size:14px;
-    }
-
-    header h1{
-      font-size:12px;
-    }
-
-    .header-controls{
-      gap:6px;
-    }
-
-    main{
-      padding:8px;
-      gap:8px;
-    }
-
-    canvas{
-      height:200px !important;
-    }
-
-    #chartTingkat{
-      height:240px !important;
-    }
-
-    .kpi{
-      padding:8px;
-    }
-
-    .kpi h3{
-      font-size:9px;
-    }
-
-    .kpi p{
-      font-size:18px;
-    }
-  }
-
-  /* Loading state */
-  .loading{
-    opacity:0.6;
-    pointer-events:none;
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar{
-    width:8px;
-    height:8px;
-  }
-
-  ::-webkit-scrollbar-track{
-    background:#f1f1f1;
-  }
-
-  ::-webkit-scrollbar-thumb{
-    background:#ccc;
-    border-radius:4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover{
-    background:#999;
+  @media (min-width:1200px){
+    main{max-width:1320px}
+    canvas{height:340px !important}
+    #chartTingkat{height:360px !important}
   }
 </style>
 </head>
@@ -687,40 +217,25 @@
     <div class="brand-text">
       <div class="school-name">SMK Taman Medan</div>
       <h1>Dashboard Kehadiran Murid</h1>
-      <div class="developer-credit">Developed by ustazashraf@2026</div>
     </div>
   </div>
   <div class="header-controls">
     <input type="date" id="tarikh">
-    <button id="btnRefresh" title="Muat semula data">🔄 Muat Semula</button>
-    <button id="btnSet" title="Tetapan API">⚙️ Tetapan</button>
+    <button id="btnRefresh" title="Muat semula data">🔄</button>
+    <button id="btnSet" title="Tetapan API">⚙️</button>
   </div>
 </header>
 <main>
   <p id="ralat"></p>
-  
   <section class="kpis">
-    <div class="kpi">
-      <h3>📈 % Kehadiran</h3>
-      <p id="kpiPeratus">–</p>
-    </div>
-    <div class="kpi">
-      <h3>✅ Hadir / Jumlah</h3>
-      <p id="kpiHadir">–</p>
-    </div>
-    <div class="kpi">
-      <h3>❌ Tidak Hadir</h3>
-      <p id="kpiTidak">–</p>
-    </div>
-    <div class="kpi">
-      <h3>⏳ Belum Dikemaskini</h3>
-      <p id="kpiBelum">–</p>
-    </div>
+    <div class="kpi"><h3>% Kehadiran</h3><p id="kpiPeratus">–</p></div>
+    <div class="kpi"><h3>Hadir / Jumlah</h3><p id="kpiHadir">–</p></div>
+    <div class="kpi"><h3>Tidak Hadir</h3><p id="kpiTidak">–</p></div>
+    <div class="kpi"><h3>Belum Dikemaskini</h3><p id="kpiBelum">–</p></div>
   </section>
-
   <section class="charts">
     <div class="card">
-      <h3>Trend % Kehadiran (30 hari terakhir)</h3>
+      <h3>Trend % Kehadiran (30 hari)</h3>
       <canvas id="chartTrend"></canvas>
     </div>
     <div class="card">
@@ -728,19 +243,17 @@
       <canvas id="chartTingkat"></canvas>
     </div>
   </section>
-
-  <section class="charts">
+  <section class="tables">
     <div class="card">
       <h3>10 Kelas Kehadiran Terendah</h3>
-      <div id="tblKelas"></div>
+      <div class="table-wrapper"><div id="tblKelas"></div></div>
     </div>
     <div class="card">
-      <h3>&#9888; Kelas Belum Dikemaskini</h3>
-      <div id="tblBelum"></div>
+      <h3>Kelas Belum Dikemaskini</h3>
+      <div class="table-wrapper"><div id="tblBelum"></div></div>
     </div>
   </section>
 </main>
-
 <script src="app.js?v=2"></script>
 </body>
 </html>
