@@ -5,6 +5,7 @@ const CFG = {
 };
 const charts = {};
 const $ = id => document.getElementById(id);
+if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
 
 /* ---------- UTILITI ---------- */
 function hariIniDDMM() {
@@ -126,7 +127,20 @@ function renderTingkat(k) {
         data: labels.map(l => grp[l][0] / grp[l][1] * 100),
         backgroundColor: '#2980b9' }]
     },
-    options: { scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
+    options: {
+      scales: { y: { min: 0, max: 100 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+          formatter: v => typeof v === 'number' ? v.toFixed(1) + '%' : v,
+          font: { weight: 'bold', size: 12 },
+          color: '#fff',
+          clip: false
+        }
+      }
+    }
   });
 }
 
