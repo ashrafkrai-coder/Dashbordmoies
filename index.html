@@ -2,7 +2,10 @@
 <html lang="ms">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Dashboard Kehadiran Murid</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0b3d91">
@@ -39,6 +42,7 @@
     background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
     color:#222;
     min-height:100vh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
   /* Header */
@@ -108,11 +112,14 @@
     background:rgba(255,255,255,0.15);
     border:1px solid rgba(255,255,255,0.3);
     color:#fff;
-    padding:8px 10px;
-    border-radius:6px;
-    font-size:13px;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:14px;
     cursor:pointer;
     transition:all 0.2s ease;
+    min-height:44px;
+    -webkit-appearance:none;
+    appearance:none;
   }
 
   header input[type="date"]:hover{
@@ -132,15 +139,19 @@
     background:rgba(255,255,255,0.15);
     border:1px solid rgba(255,255,255,0.3);
     color:#fff;
-    padding:8px 12px;
-    border-radius:6px;
+    padding:10px 14px;
+    border-radius:8px;
     cursor:pointer;
     font-size:14px;
     font-weight:600;
     transition:all 0.2s ease;
     display:flex;
     align-items:center;
+    justify-content:center;
     gap:4px;
+    min-height:44px;
+    min-width:44px;
+    -webkit-tap-highlight-color:transparent;
   }
 
   header button:hover{
@@ -157,29 +168,6 @@
     opacity:0.5;
     cursor:default;
   }
-  @media (max-width:600px){
-    header{
-      align-items:flex-start;
-    }
-
-    .brand{
-      min-width:0;
-      width:100%;
-    }
-
-    .school-logo{
-      width:50px;
-      height:50px;
-    }
-
-    .school-name{
-      font-size:18px;
-    }
-
-    .header-controls{
-      width:100%;
-    }
-  }
 
   /* Main */
   main{
@@ -189,6 +177,231 @@
     display:grid;
     gap:16px;
     padding-bottom:40px;
+  }
+  @media (max-width:768px){
+    main{
+      padding:12px;
+      gap:12px;
+    }
+
+    header{
+      flex-direction:column;
+      align-items:stretch;
+      padding:12px;
+    }
+
+    .brand{
+      min-width:0;
+      width:100%;
+    }
+
+    .school-logo{
+      width:48px;
+      height:48px;
+    }
+
+    .school-name{
+      font-size:16px;
+    }
+
+    header h1{
+      font-size:13px;
+    }
+
+    .developer-credit{
+      font-size:10px;
+    }
+
+    .header-controls{
+      width:100%;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .header-controls input[type="date"],
+    .header-controls button{
+      flex:1 1 auto;
+      min-width:0;
+      font-size:13px;
+      padding:10px 12px;
+    }
+
+    .kpis{
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+
+    .kpi{
+      padding:12px;
+    }
+
+    .kpi h3{
+      font-size:10px;
+    }
+
+    .kpi p{
+      font-size:22px;
+    }
+
+    .charts{
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .card{
+      padding:12px;
+    }
+
+    .card h3{
+      font-size:13px;
+    }
+
+    canvas{
+      height:280px !important;
+    }
+
+    #chartTingkat{
+      height:320px !important;
+    }
+
+    table{
+      font-size:11px;
+    }
+
+    th,td{
+      padding:6px 8px;
+    }
+  }
+
+  @media (max-width:480px){
+    header{
+      padding:10px;
+    }
+
+    .school-logo{
+      width:40px;
+      height:40px;
+    }
+
+    .school-name{
+      font-size:14px;
+    }
+
+    header h1{
+      font-size:12px;
+    }
+
+    .header-controls{
+      flex-direction:column;
+    }
+
+    .header-controls input[type="date"],
+    .header-controls button{
+      width:100%;
+      font-size:13px;
+    }
+
+    .kpis{
+      grid-template-columns:1fr;
+      gap:8px;
+    }
+
+    .kpi{
+      padding:10px;
+    }
+
+    .kpi h3{
+      font-size:10px;
+    }
+
+    .kpi p{
+      font-size:20px;
+    }
+
+    .card{
+      padding:10px;
+    }
+
+    .card h3{
+      font-size:12px;
+      margin-bottom:8px;
+    }
+
+    canvas{
+      height:240px !important;
+    }
+
+    #chartTingkat{
+      height:280px !important;
+    }
+
+    table{
+      font-size:10px;
+    }
+
+    th,td{
+      padding:5px 6px;
+    }
+  }
+
+  @media (max-width:360px){
+    .school-logo{
+      width:36px;
+      height:36px;
+    }
+
+    .school-name{
+      font-size:13px;
+    }
+
+    header h1{
+      font-size:11px;
+    }
+
+    .kpi p{
+      font-size:18px;
+    }
+
+    canvas{
+      height:220px !important;
+    }
+
+    #chartTingkat{
+      height:260px !important;
+    }
+  }
+
+  @media (min-width:481px) and (max-width:768px){
+    .kpis{
+      grid-template-columns:repeat(2,1fr);
+    }
+
+    .charts{
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    }
+
+    canvas{
+      height:300px !important;
+    }
+
+    #chartTingkat{
+      height:340px !important;
+    }
+  }
+
+  @media (min-width:1200px){
+    main{
+      max-width:1400px;
+    }
+
+    canvas{
+      height:380px !important;
+    }
+
+    #chartTingkat{
+      height:420px !important;
+    }
   }
 
   /* Alert */
@@ -393,67 +606,51 @@
     font-style:italic;
   }
 
-  /* Responsive */
-  @media (max-width:768px){
-    main{
-      padding:12px;
-      gap:12px;
+  @media (orientation: landscape) and (max-height: 500px) {
+    header{
+      padding:8px 12px;
     }
 
-    header{
-      flex-direction:column;
-      align-items:flex-start;
+    .school-logo{
+      width:36px;
+      height:36px;
+    }
+
+    .school-name{
+      font-size:14px;
     }
 
     header h1{
-      width:100%;
+      font-size:12px;
     }
 
     .header-controls{
-      width:100%;
+      gap:6px;
     }
 
-    header input,header button{
-      flex:1;
-      min-width:0;
+    main{
+      padding:8px;
+      gap:8px;
     }
 
-    .kpis{
-      grid-template-columns:repeat(2,1fr);
+    canvas{
+      height:200px !important;
     }
 
-    .charts{
-      grid-template-columns:1fr;
+    #chartTingkat{
+      height:240px !important;
     }
 
-    .kpi p{
-      font-size:24px;
+    .kpi{
+      padding:8px;
     }
 
-    table{
-      font-size:11px;
-    }
-
-    th,td{
-      padding:8px 6px;
-    }
-  }
-
-  @media (max-width:480px){
-    header h1{
-      font-size:16px;
-    }
-
-    .kpis{
-      grid-template-columns:1fr;
+    .kpi h3{
+      font-size:9px;
     }
 
     .kpi p{
-      font-size:20px;
-    }
-
-    .card h3{
-      font-size:12px;
+      font-size:18px;
     }
   }
 
