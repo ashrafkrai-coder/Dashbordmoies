@@ -6,10 +6,6 @@ const CFG = {
 };
 const charts = {};
 const $ = id => document.getElementById(id);
-const API_TIMEOUT = 15000;
-const CACHE_TTL = 30000;
-const apiCache = {};
-let muatLock = false;
 
 /* ---------- UTILITI ---------- */
 function hariIniDDMM() {
@@ -17,33 +13,30 @@ function hariIniDDMM() {
   return [d.getDate(), d.getMonth() + 1, d.getFullYear()]
     .map(x => String(x).padStart(2, '0')).join('/');
 }
+
 function tarikhPilihan() {
   const v = $('tarikh').value;                 // yyyy-mm-dd
   if (!v) return hariIniDDMM();
   const [y, m, d] = v.split('-');
   return `${d}/${m}/${y}`;
 }
-async function api(params) {
+
+async function api(params, cuba = 2) {         // auto-retry kalau network putus
   const url = `${CFG.api}?token=${encodeURIComponent(CFG.token)}&` +
     new URLSearchParams(params);
-  const now = Date.now();
-  if (apiCache[url] && (now - apiCache[url].ts) < CACHE_TTL) {
-    return apiCache[url].data;
-  }
-  const ac = new AbortController();
-  const tid = setTimeout(() => ac.abort(), API_TIMEOUT);
-  try {
-    const r = await fetch(url, { signal: ac.signal });
-    clearTimeout(tid);
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.ralat || 'Ralat API');
-    apiCache[url] = { data: j, ts: now };
-    return j;
-  } catch (e) {
-    clearTimeout(tid);
-    throw e;
+  for (let i = 0; i < cuba; i++) {
+    try {
+      const r = await fetch(url);
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.ralat || 'Ralat API');
+      return j;
+    } catch (e) {
+      if (i === cuba - 1) throw e;
+      await new Promise(res => setTimeout(res, 1500));
+    }
   }
 }
+
 function idx(headers, regex) { return headers.findIndex(h => regex.test(h)); }
 
 /* ---------- RENDER ---------- */
@@ -65,22 +58,20 @@ function buatChart(id, config) {
   if (charts[id]) charts[id].destroy();
   charts[id] = new Chart($(id), config);
 }
-function formatTarikh(iso) {
-  const [y, m, d] = iso.split('-');
-  return d && m && y ? `${d}/${m}/${y}` : iso;
-}
+
 function renderTrend(s) {
   const rows = s.rows.slice(-30);
   buatChart('chartTrend', {
     type: 'line',
     data: {
-      labels: rows.map(r => formatTarikh(r[0])),
+      labels: rows.map(r => r[0]),
       datasets: [{ label: '% Kehadiran', data: rows.map(r => r[3]),
         borderColor: '#0b3d91', backgroundColor: '#0b3d9122', fill: true, tension: .3 }]
     },
     options: { scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
   });
 }
+
 function renderTingkat(k) {
   const iT = idx(k.headers, /tahun|tingkatan/i), iJ = idx(k.headers, /jumlah/i);
   const grp = {};
@@ -89,33 +80,31 @@ function renderTingkat(k) {
     const g = grp[r[iT]] = grp[r[iT]] || [0, 0];
     g[0] += +m[1]; g[1] += +m[2];
   });
-  const urutanTingkatan = {
-    'SATU': 1, 'DUA': 2, 'TIGA': 3, 'EMPAT': 4, 'LIMA': 5,
-    'SIX': 6, 'SEVEN': 7, 'EIGHT': 8, 'NINE': 9, 'TEN': 10,
-    '1': 1, '2': 2, '3': 3, '4': 4, '5': 5,
-    '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
-  };
-  const labels = Object.keys(grp).sort((a, b) => {
-    const ma = a.match(/(\d+|SATU|DUA|TIGA|EMPAT|LIMA|SIX|SEVEN|EIGHT|NINE|TEN)/i);
-    const mb = b.match(/(\d+|SATU|DUA|TIGA|EMPAT|LIMA|SIX|SEVEN|EIGHT|NINE|TEN)/i);
-    const va = ma ? urutanTingkatan[ma[1].toUpperCase()] : null;
-    const vb = mb ? urutanTingkatan[mb[1].toUpperCase()] : null;
-    if (va !== null && vb !== null) return va - vb;
-    if (va !== null) return -1;
-    if (vb !== null) return 1;
-    return a.localeCompare(b);
-  });
+  const labels = Object.keys(grp).sort();
   buatChart('chartTingkat', {
     type: 'bar',
     data: {
       labels,
       datasets: [{ label: '% Kehadiran',
-        data: labels.map(l => (grp[l][0] / grp[l][1] * 100).toFixed(1)),
+        data: labels.map(l => grp[l][0] / grp[l][1] * 100),
         backgroundColor: '#2980b9' }]
     },
-    options: { scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
+    options: {
+      scales: { y: { min: 0, max: 100 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          formatter: v => typeof v === 'number' ? v.toFixed(1) + '%' : v,
+          font: { weight: 'bold', size: 12 },
+          color: '#0b3d91'
+        }
+      }
+    }
   });
 }
+
 function renderKelas(k) {
   const iK = idx(k.headers, /^kelas$/i) >= 0 ? idx(k.headers, /^kelas$/i) : idx(k.headers, /kelas/i);
   const iT = idx(k.headers, /tingkatan/i), iJ = idx(k.headers, /jumlah/i);
@@ -127,6 +116,7 @@ function renderKelas(k) {
     rows.map(r => `<tr><td>${r.k}</td><td>${r.t}</td><td>${r.j}</td><td>${r.p.toFixed(1)}</td></tr>`).join('') +
     '</table>';
 }
+
 function renderSebab(s) {
   if (!s.rows.length) { $('tblSebab').innerHTML = '<p>Tiada rekod / tiada data.</p>'; return; }
   const skip = 0; // kolom 0 = Tarikh
@@ -139,30 +129,24 @@ function renderSebab(s) {
 
 /* ---------- MUAT DATA ---------- */
 async function muat() {
-  if (muatLock) return;
   $('ralat').style.display = 'none';
   if (!CFG.api || !CFG.token) return tetapan();
   const t = tarikhPilihan();
-  muatLock = true;
-  $('btnRefresh').disabled = true;
-  $('btnRefresh').textContent = '⏳';
   try {
     const [kelas, sum, sebab] = await Promise.all([
       api({ action: 'sheet', name: CFG.sheetKelas, tarikh: t }),
       api({ action: 'summary' }),
-      api({ action: 'sheet', name: CFG.sheetSebab, tarikh: t }),
+      api({ action: 'sheet', name: CFG.sheetSebab, tarikh: t })
+        .catch(() => ({ ok: true, headers: [], rows: [] })), // sebab optional
     ]);
     renderKPI(kelas); renderTrend(sum); renderTingkat(kelas);
     renderKelas(kelas); renderSebab(sebab);
   } catch (e) {
     $('ralat').textContent = '⚠ ' + e.message;
     $('ralat').style.display = 'block';
-  } finally {
-    muatLock = false;
-    $('btnRefresh').disabled = false;
-    $('btnRefresh').textContent = '🔄';
   }
 }
+
 function tetapan() {
   const a = prompt('URL Apps Script (/exec):', CFG.api);
   if (a) { CFG.api = a.trim(); localStorage.setItem('api', CFG.api); }
@@ -175,11 +159,5 @@ function tetapan() {
 $('btnSet').onclick = tetapan;
 $('btnRefresh').onclick = muat;
 $('tarikh').valueAsDate = new Date();
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(reg => {
-    console.log('SW registered:', reg.scope);
-  }).catch(err => {
-    console.warn('SW registration failed:', err);
-  });
-}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 muat();
