@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Kehadiran Murid</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b3d91">
+<link rel="icon" href="icon.svg">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  :root{--biru:#0b3d91;--bg:#f4f6f9}
+  *{box-sizing:border-box;margin:0}
+  body{font-family:system-ui,Segoe UI,sans-serif;background:var(--bg);color:#222}
+  header{background:var(--biru);color:#fff;padding:12px 16px;display:flex;
+    justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  header h1{font-size:18px}
+  header button{background:#ffffff22;border:0;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer}
+header button:disabled{opacity:.5;cursor:default}
+  main{padding:14px;max-width:1100px;margin:auto;display:grid;gap:14px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .kpi{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 4px #0002}
+  .kpi h3{font-size:12px;color:#666;font-weight:600}
+  .kpi p{font-size:26px;font-weight:800;color:var(--biru)}
+  .card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 4px #0002}
+  .card h3{font-size:14px;margin-bottom:8px}
+  .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #eee}
+  th{background:#f0f4ff}
+  #ralat{display:none;background:#c0392b;color:#fff;padding:8px 14px;border-radius:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 Dashboard Kehadiran Murid</h1>
+  <div>
+    <input type="date" id="tarikh">
+    <button id="btnRefresh">🔄</button>
+    <button id="btnSet">⚙️</button>
+  </div>
+</header>
+<main>
+  <p id="ralat"></p>
+  <section class="kpis">
+    <div class="kpi"><h3>% KEHADIRAN</h3><p id="kpiPeratus">–</p></div>
+    <div class="kpi"><h3>HADIR / JUMLAH</h3><p id="kpiHadir">–</p></div>
+    <div class="kpi"><h3>TIDAK HADIR</h3><p id="kpiTidak">–</p></div>
+    <div class="kpi"><h3>KELAS BELUM DIKEMASKINI</h3><p id="kpiBelum">–</p></div>
+  </section>
+  <section class="charts">
+    <div class="card"><h3>Trend % Kehadiran (30 hari)</h3><canvas id="chartTrend"></canvas></div>
+    <div class="card"><h3>Kehadiran Mengikut Tingkatan</h3><canvas id="chartTingkat"></canvas></div>
+  </section>
+  <section class="charts">
+    <div class="card"><h3>10 Kelas Kehadiran Terendah</h3><div id="tblKelas"></div></div>
+    <div class="card"><h3>Murid Tidak Hadir Hari Ini</h3><div id="tblSebab"></div></div>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
