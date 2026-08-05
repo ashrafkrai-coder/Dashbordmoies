@@ -1,6 +1,6 @@
 // Tetapan kongsi (read-only) — isi sekali sahaja, kemudian orang lain terus boleh lihat
-const DEFAULT_API = '';    // <-- tampal URL Apps Script (/exec) di sini
-const DEFAULT_TOKEN = '';  // <-- tampal token read-only di sini
+const DEFAULT_API = 'https://script.google.com/macros/s/AKfycbwip22NBIdDmsCxuwypcDrHSbd3ZNnzzNdJJPP6DrHZLw4fCo7iQlJ0H15ivZiqCise/exec';
+const DEFAULT_TOKEN = 'BEA8613@TM';
 
 const CFG = {
   api:   localStorage.getItem('api')   || DEFAULT_API,
