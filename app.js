@@ -131,24 +131,62 @@ function renderTingkat(k) {
     return a.localeCompare(b);
   });
   const displayLabels = labels.map(namaTingkatan);
+  const data = labels.map(l => grp[l][0] / grp[l][1] * 100);
+  const palette = ['#2563eb', '#0ea5e9', '#14b8a6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#22c55e', '#06b6d4', '#a855f7'];
   buatChart('chartTingkat', {
     type: 'bar',
     data: {
       labels: displayLabels,
-      datasets: [{ label: '% Kehadiran',
-        data: labels.map(l => grp[l][0] / grp[l][1] * 100),
-        backgroundColor: '#2980b9' }]
+      datasets: [{
+        label: '% Kehadiran',
+        data,
+        backgroundColor: (ctx) => {
+          const { chart } = ctx;
+          const { ctx: c, chartArea } = chart;
+          if (!chartArea) return palette[0];
+          const g = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+          const base = palette[ctx.dataIndex % palette.length];
+          g.addColorStop(0, base + 'cc');
+          g.addColorStop(1, base);
+          return g;
+        },
+        borderRadius: 8,
+        borderSkipped: false,
+        maxBarThickness: 52,
+      }]
     },
     options: {
-      scales: { y: { min: 0, max: 100 } },
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 16 } },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          grid: { color: '#eef0f4', drawTicks: false },
+          border: { display: false },
+          ticks: { color: '#9ca3af', font: { size: 11 }, stepSize: 20,
+            callback: v => v + '%' }
+        },
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: '#4b5563', font: { size: 12, weight: '600' } }
+        }
+      },
       plugins: {
         legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1d2e', padding: 10, cornerRadius: 8,
+          displayColors: false,
+          callbacks: { label: c => 'Kehadiran: ' + c.parsed.y.toFixed(1) + '%' }
+        },
         datalabels: {
-          anchor: 'center',
-          align: 'center',
+          anchor: 'end',
+          align: 'top',
+          offset: 2,
           formatter: v => typeof v === 'number' ? v.toFixed(1) + '%' : v,
-          font: { weight: 'bold', size: 12 },
-          color: '#fff',
+          font: { weight: 'bold', size: 13 },
+          color: '#1a1d2e',
           clip: false
         }
       }
