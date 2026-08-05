@@ -28,17 +28,26 @@ function tarikhPilihan() {
 async function api(params, cuba = 2) {
   const url = `${CFG.api}?token=${encodeURIComponent(CFG.token)}&` +
     new URLSearchParams(params);
+  let lastErr;
   for (let i = 0; i < cuba; i++) {
     try {
       const r = await fetch(url);
-      const j = await r.json();
+      const text = await r.text();
+      let j;
+      try {
+        j = JSON.parse(text);
+      } catch {
+        throw new Error('Respons bukan JSON. Mungkin token tidak sah, skrip Apps Script ralat, atau kuota penuh.');
+      }
       if (!j.ok) throw new Error(j.ralat || 'Ralat API');
       return j;
     } catch (e) {
-      if (i === cuba - 1) throw e;
+      lastErr = e;
+      if (i === cuba - 1) break;
       await new Promise(res => setTimeout(res, 1500));
     }
   }
+  throw lastErr;
 }
 
 function idx(headers, regex) { return headers.findIndex(h => regex.test(h)); }

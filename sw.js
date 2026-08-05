@@ -116,20 +116,25 @@ function handleAPIRequest(event) {
         // Coba network dahulu (untuk data fresh)
         const networkRes = await fetch(event.request);
         
+        const ct = networkRes.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) {
+          console.warn('[SW] Respons API bukan JSON, abaikan cache:', ct);
+          return networkRes;
+        }
         if (!networkRes.ok) {
           console.warn('[SW] API returned error:', networkRes.status);
-          // Cek cache jika network error
           const cachedRes = await caches.match(event.request);
-          return cachedRes || createErrorResponse('API Error: ' + networkRes.status);
+          return cachedRes || new Response(
+            JSON.stringify({ ok: false, ralat: 'API Error: ' + networkRes.status }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
-        
-        // Cache response yang berhasil
+
+        // Cache response yang berhasil (JSON sahaja)
         const cache = await caches.open(API_CACHE);
-        const resClone = networkRes.clone();
-        cache.put(event.request, resClone).catch(err => {
+        cache.put(event.request, networkRes.clone()).catch(err => {
           console.warn('[SW] Cache put failed:', err);
         });
-        
+
         console.log('[SW] API response cached');
         return networkRes;
         
@@ -143,8 +148,11 @@ function handleAPIRequest(event) {
           return cachedRes;
         }
         
-        // Tidak ada cache, return error
-        return createErrorResponse('Offline: No cached API response available');
+        // Tidak ada cache, kembalikan JSON ralat (BUKAN halaman HTML)
+        return new Response(
+          JSON.stringify({ ok: false, ralat: 'Offline: tiada cache API tersedia' }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
       }
     })()
   );
