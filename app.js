@@ -139,12 +139,12 @@ function bulanKeyNorm(s) {
 function aggBulanan(records) {
   const map = {};
   records.forEach(r => {
-    const mt = String(r.jumlah_pelajar || '').match(/(\d+)\s*\/\s*(\d+)/);
+    const h = Number(r.hadir), j = Number(r.jumlah);
     const kelas = r.nama_kelas, ting = r.tingkatan;
-    if (!kelas || !mt) return;
+    if (!kelas || !j) return;
     if (!map[kelas]) map[kelas] = { k: kelas, t: ting, h: 0, j: 0 };
-    map[kelas].h += +mt[1];
-    map[kelas].j += +mt[2];
+    map[kelas].h += h;
+    map[kelas].j += j;
   });
   return Object.values(map)
     .map(x => ({ k: x.k, t: x.t, h: x.h, j: x.j, p: x.j ? x.h / x.j * 100 : 0 }))
