@@ -324,5 +324,12 @@ function tetapan() {
 $('btnSet').onclick = tetapan;
 $('btnRefresh').onclick = muat;
 $('tarikh').valueAsDate = new Date();
+
+let _syncT;
+$('tarikh').addEventListener('change', () => {
+  clearTimeout(_syncT);
+  _syncT = setTimeout(muat, 250); // auto-sync bila tukar tarikh
+});
+
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 muat();
