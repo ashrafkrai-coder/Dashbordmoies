@@ -116,6 +116,64 @@ async function ambilDataSummary() {
   return toShapeSummary(data || []);
 }
 
+/* ---------- STATISTIK BULANAN ---------- */
+async function ambilDataKelasBulan(tarikh) {
+  if (!supa) throw new Error('Supabase client tidak dijumpai.');
+  const [d, m, y] = String(tarikh).split('/');
+  const { data, error } = await supa
+    .from('kehadiran_kelas')
+    .select('*')
+    .like('tarikh', `%/${m}/${y}`);
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+function bulanKeyNorm(s) {
+  if (!s) return '';
+  const p = String(s).split(/[-/]/).filter(Boolean);
+  if (p.length !== 3) return '';
+  const y = p[0].length === 4 ? p[0] : p[2];
+  return `${y}-${p[1]}`;
+}
+
+function aggBulanan(records) {
+  const map = {};
+  records.forEach(r => {
+    const mt = String(r.jumlah_pelajar || '').match(/(\d+)\s*\/\s*(\d+)/);
+    const kelas = r.nama_kelas, ting = r.tingkatan;
+    if (!kelas || !mt) return;
+    if (!map[kelas]) map[kelas] = { k: kelas, t: ting, h: 0, j: 0 };
+    map[kelas].h += +mt[1];
+    map[kelas].j += +mt[2];
+  });
+  return Object.values(map)
+    .map(x => ({ k: x.k, t: x.t, h: x.h, j: x.j, p: x.j ? x.h / x.j * 100 : 0 }))
+    .filter(x => x.j > 0);
+}
+
+function renderBulan(records, t) {
+  const key = bulanKeyNorm(t);
+  const arr = aggBulanan(records.filter(r => bulanKeyNorm(r.tarikh) === key));
+  const setCard = (idP, idN, rec) => {
+    if (rec) {
+      $(idP).textContent = rec.p.toFixed(1) + '%';
+      $(idN).textContent = `${rec.k} • Ting ${rec.t}`;
+    } else {
+      $(idP).textContent = '–';
+      $(idN).textContent = 'Tiada data bulan ini';
+    }
+  };
+  if (!arr.length) {
+    setCard('kpiTinggiBulan', 'kpiTinggiBulanNama', null);
+    setCard('kpiRendahBulan', 'kpiRendahBulanNama', null);
+    return;
+  }
+  const tertinggi = arr.reduce((a, b) => b.p > a.p ? b : a);
+  const terendah = arr.reduce((a, b) => b.p < a.p ? b : a);
+  setCard('kpiTinggiBulan', 'kpiTinggiBulanNama', tertinggi);
+  setCard('kpiRendahBulan', 'kpiRendahBulanNama', terendah);
+}
+
 /* ---------- RENDER (SAMA SEPERTI ASAL) ---------- */
 function renderKPI(k) {
   const iJ = idx(k.headers, /jumlah/i), iS = idx(k.headers, /kehadiran/i);
@@ -299,12 +357,13 @@ async function muat() {
   if (!supa || !CFG.url || !CFG.key) { tetapan(); return; }
   const t = tarikhPilihan();
   try {
-    const [kelas, sum] = await Promise.all([
+    const [kelas, sum, rekodBulan] = await Promise.all([
       ambilDataKelas(t),
       ambilDataSummary(),
+      ambilDataKelasBulan(t),
     ]);
     renderKPI(kelas); renderTrend(sum); renderTingkat(kelas);
-    renderKelas(kelas); renderBelumKemas(kelas);
+    renderKelas(kelas); renderBelumKemas(kelas); renderBulan(rekodBulan, t);
   } catch (e) {
     $('ralat').textContent = '⚠ ' + e.message;
     $('ralat').style.display = 'block';
