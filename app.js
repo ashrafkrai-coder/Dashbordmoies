@@ -136,6 +136,16 @@ function bulanKeyNorm(s) {
   return `${y}-${p[1]}`;
 }
 
+function hariKeyNorm(s) {
+  if (!s) return '';
+  const p = String(s).split(/[-/]/).filter(Boolean);
+  if (p.length !== 3) return '';
+  let y, m, d;
+  if (p[0].length === 4) { y = p[0]; m = p[1]; d = p[2]; }
+  else { y = p[2]; m = p[1]; d = p[0]; }
+  return `${y}-${m}-${d}`;
+}
+
 function aggBulanan(records) {
   const map = {};
   records.forEach(r => {
@@ -172,6 +182,38 @@ function renderBulan(records, t) {
   const terendah = arr.reduce((a, b) => b.p < a.p ? b : a);
   setCard('kpiTinggiBulan', 'kpiTinggiBulanNama', tertinggi);
   setCard('kpiRendahBulan', 'kpiRendahBulanNama', terendah);
+}
+
+/* ---------- STATISTIK SESI PAGI / PETANG ---------- */
+function isPagi(r) {
+  const ting = String(r.tingkatan || '').toUpperCase();
+  const alFarabi = /AL[- ]?FARABI/i.test(String(r.nama_kelas || ''));
+  return alFarabi || /TIGA|EMPAT|LIMA|^3$|^4$|^5$/i.test(ting);
+}
+function isPetang(r) {
+  const ting = String(r.tingkatan || '').toUpperCase();
+  const alFarabi = /AL[- ]?FARABI/i.test(String(r.nama_kelas || ''));
+  return /SATU|DUA|^1$|^2$/i.test(ting) && !alFarabi;
+}
+function renderSesi(records, t) {
+  const key = hariKeyNorm(t);
+  const hari = records.filter(r => hariKeyNorm(r.tarikh) === key);
+  const hitung = (list) => {
+    let h = 0, j = 0;
+    list.forEach(r => { h += Number(r.hadir) || 0; j += Number(r.jumlah) || 0; });
+    return j ? { p: h / j * 100, h, j } : null;
+  };
+  const set = (idP, idN, v) => {
+    if (v) {
+      $(idP).textContent = v.p.toFixed(1) + '%';
+      $(idN).textContent = `${v.h}/${v.j}`;
+    } else {
+      $(idP).textContent = '–';
+      $(idN).textContent = 'Tiada data';
+    }
+  };
+  set('kpiSesiPagi', 'kpiSesiPagiJml', hitung(hari.filter(isPagi)));
+  set('kpiSesiPetang', 'kpiSesiPetangJml', hitung(hari.filter(isPetang)));
 }
 
 /* ---------- RENDER (SAMA SEPERTI ASAL) ---------- */
@@ -363,7 +405,7 @@ async function muat() {
       ambilDataKelasBulan(t),
     ]);
     renderKPI(kelas); renderTrend(sum); renderTingkat(kelas);
-    renderKelas(kelas); renderBelumKemas(kelas); renderBulan(rekodBulan, t);
+    renderKelas(kelas); renderBelumKemas(kelas); renderBulan(rekodBulan, t); renderSesi(rekodBulan, t);
   } catch (e) {
     $('ralat').textContent = '⚠ ' + e.message;
     $('ralat').style.display = 'block';
